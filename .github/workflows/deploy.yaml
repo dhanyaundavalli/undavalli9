@@ -6,7 +6,7 @@ phases:
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 794038241915.dkr.ecr.us.east.1.amazonaws.com
       - TAG="$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | head -c 8)"
-      - IMAGE_URI="794038241915.dkr.ecr.us.east-1.amazonaws.com/flask-app-repo-dhanya:latest"
+      - IMAGE_URI="794038241915.dkr.ecr.ca-central-1.amazonaws.com/flask-app-repo-dhanya:latest"
   build:
     commands:
       - echo Build started on 'date'
