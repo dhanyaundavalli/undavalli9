@@ -8,10 +8,13 @@ on:
 jobs:
   build_and_push:
     runs-on: ubuntu-latest
+
     steps:
+      # Step 1: Checkout Code
       - name: Checkout code
         uses: actions/checkout@v2
 
+      # Step 2: Configure AWS Credentials
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -19,12 +22,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1  # Replace with your AWS region
 
+      # Step 3: Log in to Amazon ECR
       - name: Log in to Amazon ECR
         run: |
           aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 794038241915.dkr.ecr.us-east-1.amazonaws.com
 
+      # Step 4: Build and Push Docker Image
       - name: Build and Push Docker Image
         run: |
           docker build -t flask-app-repo-dhanya .
-          docker tag final-test:latest 794038241915.dkr.ecr.us-east-1.amazonaws.com/flask-app-repo-dhanya:latest
+          docker tag flask-app-repo-dhanya:latest 794038241915.dkr.ecr.us-east-1.amazonaws.com/flask-app-repo-dhanya:latest
           docker push 794038241915.dkr.ecr.us-east-1.amazonaws.com/flask-app-repo-dhanya:latest
