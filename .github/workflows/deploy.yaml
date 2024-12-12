@@ -1,23 +1,30 @@
-version: 0.2
-phases:
-  pre_build:
-    commands:
-      - aws --version
-      - echo Logging in to Amazon ECR...
-      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 794038241915.dkr.ecr.us.east.1.amazonaws.com
-      - TAG="$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | head -c 8)"
-      - IMAGE_URI="794038241915.dkr.ecr.ca-central-1.amazonaws.com/flask-app-repo-dhanya:latest"
-  build:
-    commands:
-      - echo Build started on 'date'
-      - echo Building the Docker image...
-      - docker build --tag "$IMAGE_URI" .
-  post_build:
-    commands:
-      - echo Build comleted on 'date'
-      - echo Pushing the Docker images...
-      - docker push "$IMAGE_URI"
-      - echo Writing image definintions file...
-      - printf '[{"name":"FrontendContainer","imageUri":"%s"}]' "$IMAGE_URI" > imagedef.json
-artifacts:
-  files: imagedef.json
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main  # Adjust this to the branch you want to trigger the pipeline on
+
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1  # Replace with your AWS region
+
+      - name: Log in to Amazon ECR
+        run: |
+          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 794038241915.dkr.ecr.us-east-1.amazonaws.com
+
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t flask-app-repo-dhanya .
+          docker tag final-test:latest 794038241915.dkr.ecr.us-east-1.amazonaws.com/flask-app-repo-dhanya:latest
+          docker push 794038241915.dkr.ecr.us-east-1.amazonaws.com/flask-app-repo-dhanya:latest
