@@ -14,22 +14,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Step 2: Configure AWS Credentials
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+      # Step 2: Authenticate with GCP
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1  # Replace with your AWS region
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'  # Add your GCP service account key JSON as a secret
 
-      # Step 3: Log in to Amazon ECR
-      - name: Log in to Amazon ECR
+      # Step 3: Configure Docker to use GCP Artifact Registry
+      - name: Configure Docker for GCP Artifact Registry
         run: |
-          aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 794038241915.dkr.ecr.us-east-1.amazonaws.com
+          gcloud auth configure-docker us-central1-docker.pkg.dev  # Replace REGION with your GCP region (e.g., us-central1)
 
-      # Step 4: Build and Push Docker Image
+      # Step 4: Build and Push Docker Image to Artifact Registry
       - name: Build and Push Docker Image
         run: |
-          docker build -t flask-app-repo-dhanya .
-          docker tag flask-app-repo-dhanya:latest 794038241915.dkr.ecr.us-east-1.amazonaws.com/flask-app-repo-dhanya:latest
-          docker push 794038241915.dkr.ecr.us-east-1.amazonaws.com/flask-app-repo-dhanya:latest
+          docker build -t REGION-docker.pkg.dev/warm-league-441823-f7/REPO_NAME/flask-app:latest .
+          docker push REGION-docker.pkg.dev/warm-league-441823-f7/REPO_NAME/flask-app:latest
+
+      # Step 5: Deploy to Cloud Run
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy flask-app \
+            --image REGION-docker.pkg.dev/warm-league-441823-f7/REPO_NAME/flask-app:latest \
+            --region REGION \
+            --platform managed \
+            --allow-unauthenticated
