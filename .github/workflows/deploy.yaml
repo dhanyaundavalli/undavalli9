@@ -3,39 +3,39 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main  # Adjust this to the branch you want to trigger the pipeline on
+      - main
 
 jobs:
-  build_and_push:
+  build_and_deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout Code
+      # Step 1: Checkout code
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Step 2: Authenticate with GCP
+      # Step 2: Authenticate to Google Cloud
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
-          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'  # Add your GCP service account key JSON as a secret
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
 
-      # Step 3: Configure Docker to use GCP Artifact Registry
+      # Step 3: Configure Docker for GCP Artifact Registry
       - name: Configure Docker for GCP Artifact Registry
         run: |
-          gcloud auth configure-docker us-central1-docker.pkg.dev  # Replace REGION with your GCP region (e.g., us-central1)
+          gcloud auth configure-docker
 
-      # Step 4: Build and Push Docker Image to Artifact Registry
+      # Step 4: Build and Push Docker Image
       - name: Build and Push Docker Image
         run: |
-          docker build -t REGION-docker.pkg.dev/warm-league-441823-f7/REPO_NAME/flask-app:latest .
-          docker push REGION-docker.pkg.dev/warm-league-441823-f7/REPO_NAME/flask-app:latest
+          docker build -t gcr.io/warm-league-441823-f7/flask-app:latest .
+          docker push gcr.io/warm-league-441823-f7/flask-app:latest
 
       # Step 5: Deploy to Cloud Run
       - name: Deploy to Cloud Run
         run: |
           gcloud run deploy flask-app \
-            --image REGION-docker.pkg.dev/warm-league-441823-f7/REPO_NAME/flask-app:latest \
+            --image gcr.io/warm-league-441823-f7/flask-app:latest \
             --region REGION \
             --platform managed \
             --allow-unauthenticated
